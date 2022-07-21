@@ -593,35 +593,5 @@ export default {
 </script>
 
 <style lang="scss">
-* {
-  margin:0;
-  padding:0;
-  box-sizing: border-box;
-}
-#tetris-game {
-  font-family: 'Press Start 2P', cursive;
-  // font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: white;
-  background-color: rgb(209, 235, 189);
-  background-image: url('/src/static/bg3.jpg');
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  min-height: 100vh;
-}
-.tetris {
-  &__container {
-    display: flex;
-    align-items: center;
-    &-game {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-  }
-}
+@import './assets/styles/app.scss';
 </style>

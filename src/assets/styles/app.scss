@@ -1,0 +1,35 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+* {
+  margin:0;
+  padding:0;
+  box-sizing: border-box;
+}
+h1, h2, h3, h4, h5, h6, p, label {
+  font-family: 'Press Start 2P', cursive;
+  line-height: 1.2;
+}
+#tetris-game {
+  // font-family: Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-align: center;
+  color: white;
+  background-color: rgb(209, 235, 189);
+  background-image: url('/src/static/background.jpg');
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  min-height: 100vh;
+}
+.tetris {
+  &__container {
+    display: flex;
+    align-items: center;
+    &-game {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+}

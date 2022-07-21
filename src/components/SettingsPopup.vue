@@ -1,0 +1,162 @@
+<template>
+  <div id="settings-popup">
+    <p>Recycled Tetris</p>
+    <div v-if="type === 'start-popup'">
+      <form name="settings">
+        <p>Choose the options:</p>
+        <p class="options__title">Grid Size</p>
+        <div class="options__radio">
+          <input type="radio" id="normal" name="gridSize" value="10x15" checked>
+          <label for="normal">Normal - 10 x 15</label><br>
+          <input type="radio" id="large" name="gridSize" value="12x18">
+          <label for="large">Large - 12 x 18</label><br>
+          <input type="radio" id="extra-large" name="gridSize" value="15x20">
+          <label for="extra-large">XLarge - 15 x 20</label>
+        </div>
+        <p class="options__title">Theme</p>
+        <div class="options__radio">
+          <input type="radio" id="default" name="theme" value="default" checked>
+          <label for="default">Default</label><br>
+          <input type="radio" id="bricks" name="theme" value="bricks">
+          <label for="bricks">Bricks</label><br>
+          <input type="radio" id="sea" name="theme" value="sea">
+          <label for="sea">Sea</label>
+        </div>
+        <p class="options__title">Starting difficulty</p>
+        <div class="options__qty-selector">
+          <button class="qty-selector__selector" @click.prevent="addLevel(-1)">
+            <i class="fa-solid fa-minus"></i>
+          </button>
+          <input name="level" class="qty-selector__qty" readonly value="1"/>
+          <button class="qty-selector__selector" @click.prevent="addLevel(1)">
+            <i class="fa-solid fa-plus"></i>
+          </button>
+        </div>
+        <button type="submit" @click.prevent="startGame">
+          <p>Start</p>
+          <i class="fa-solid fa-play"></i>
+        </button>
+      </form>
+    </div>
+
+    <div v-else-if="type === 'options-popup'">
+      <div>
+        <button @click="$emit('continue-game')">Continue</button>
+        <button @click="triggerInstructions">How to play</button>
+        <button @click="$emit('end-game')">Quit</button>
+      </div>
+      <div v-show="isHowToPlayVisible" class="how-to-play__container">
+        <p>Using keyboard:</p>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button"><i class="fa-solid fa-arrow-up"></i></div>
+          <p>Rotate clockwise</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button"><i class="fa-solid fa-arrow-down"></i></div>
+          <p>Push down</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button"><i class="fa-solid fa-arrow-left"></i></div>
+          <p>Move left</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button"><i class="fa-solid fa-arrow-right"></i></div>
+          <p>Move right</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button"><i class="fa-solid fa-plus"></i></div>
+          <p>Rotate clockwise</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button"><i class="fa-solid fa-minus"></i></div>
+          <p>Rotate counterclockwise</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button">P</div>
+          <p>Pause</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button">C</div>
+          <p>Continue</p>
+        </div>
+        <p>Using gestures:</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+export default {
+  name: 'SettingsPopup',
+  props: {
+    isVisible: {
+      type: Boolean,
+      default: false,
+    },
+    type: {
+      type: String,
+      default: null,
+    },
+  },
+  data() {
+    return {
+      isHowToPlayVisible: false,
+    }
+  },
+  methods: {
+    triggerInstructions() {
+      this.isHowToPlayVisible = !this.isHowToPlayVisible;
+    },
+    startGame() {
+      this.$emit('startGame', document.forms.settings);
+    },
+    addLevel(num) {
+      const qtyTag = document.getElementsByClassName('qty-selector__qty')[0];
+      let val = Number(qtyTag.value);
+      if ((val + num >= 1) && (val + num <= 10)) {
+        val += num;
+      }
+      return qtyTag.value = val;
+    }
+  }
+}
+</script>
+
+<style lang="scss" scoped>
+#settings-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.495);
+  color: white;
+  z-index: 1;
+}
+.how-to-play {
+  &__container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  &__rule {
+    display: flex;
+    align-items: center;
+    width: 250px;
+    color: white;
+    p {
+      padding-left: 10px;
+    }
+  }
+  &__button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 35px;
+    height: 35px;
+    margin: 5px;
+    border: 3px solid white;
+    border-radius: 8px;
+  }
+}
+</style>

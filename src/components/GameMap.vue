@@ -81,22 +81,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.game {
-  &__grid {
-    display: flex;
-    flex-wrap: wrap;
-  }
-  &__cell {
-    box-sizing: border-box;
-    background-color: rgba(0, 0, 0, 0.365);
-    // mix-blend-mode: exclusion;
-  }
-}
-.occupied {
-  background-color: #9c7448;
-}
-.preview {
-  background-color: white;
-  border: 1px solid green;
-}
+@import '../assets/styles/game-map.scss';
 </style>

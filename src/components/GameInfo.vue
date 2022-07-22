@@ -36,17 +36,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-#game-info {
-  display: flex;
-  width: 100%;
-  justify-content: space-between;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.365);
-  border: 3px solid white;
-}
-.game-info {
-  &__property {
-    padding: 5px;
-  }
-}
+@import '../assets/styles/game-info.scss';
 </style>

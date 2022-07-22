@@ -28,7 +28,7 @@
         <AudioControls
           :has-music="audioSettings.backgroundMusic"
           :has-effects="audioSettings.effects"
-          @mute-audio="muteAudio('backgroundMusic')"
+          @mute-music="muteAudio('backgroundMusic')"
           @mute-effects="muteAudio('effects')" />
       </div>
     </div>
@@ -203,6 +203,11 @@ export default {
     }
   },
   methods: {
+    updateHighscore() {
+      if (this.score > this.bestScore) {
+        this.bestScore = this.score;
+      }
+    },
     resetConditions() {
       this.occupiedCellsIds = [];
       this.blocks = [];
@@ -294,6 +299,7 @@ export default {
         // this.updateHighscore();
         this.playAudio('lose');
         this.triggerSettingsPopup(true, 'start-popup');
+        this.updateHighscore();
         alert('You lose motherfucker!');
       } else if (status === 'pause') {
         if (!this.isPlaying) return;

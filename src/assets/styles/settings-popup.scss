@@ -150,23 +150,24 @@
     }
     .options {
       &__title {
-          font-size: 18px;
+        margin: 10px 0px;
+        font-size: 18px;
       }
       &__radio {
-          label {
-              font-size: 14px;
-          }
+        label {
+          font-size: 14px;
+        }
       }
       &__qty-selector {
-          button {
-              font-size: 18px;
-              padding: 5px;
-          }
-          input {
-              font-size: 18px;
-              padding: 5px;
-              width: 60px;
-          }
+        button {
+          font-size: 18px;
+          padding: 5px;
+        }
+        input {
+          font-size: 18px;
+          padding: 5px;
+          width: 60px;
+        }
       }
     }
     .recycle {

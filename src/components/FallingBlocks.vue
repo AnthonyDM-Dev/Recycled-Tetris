@@ -52,13 +52,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-/* #falling-blocks {
-  
-} */
-.block {
-  position: absolute;
-  box-sizing: border-box;
-  background-color: transparent;
-  transition: top 0.1s, left 0.1s;
-}
+@import '../assets/styles/falling-blocks.scss';
 </style>

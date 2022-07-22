@@ -12,10 +12,13 @@
 @media only screen and (max-width: 767px) {
   #pause-button {
     order: 1;
+    justify-content: center;
+    margin: 0px 5px 5px 5px;
   }
   .button {
     &__pause {
-      font-size: 16px;
+      width: 250px;
+      font-size: 12px;
     }
   }
 }

@@ -16,30 +16,20 @@
           :theme="gameTheme"
         />
       </div>
-      <PiecesPreviewer
-        :is-preview="true"
-        :shapes-list="shapesList"
-        :occupied-cells-ids="occupiedCellsIds"
-        :grid-size="[4, 2]"
-        :cell-size="squareSize"
-      />
-      <div class="buttons__container">
-        <button @click="changeGameStatus('pause')">
-          <div v-if="isPlaying && !isPause">
-            <p>Pause</p>
-            <i class="fa-solid fa-pause"></i>
-          </div>
-        </button>
-        <button @click="muteAudio('backgroundMusic')">
-          <p>Music</p>
-          <i v-if="audioSettings.backgroundMusic" class="fa-solid fa-volume-high"></i>
-          <i v-else class="fa-solid fa-volume-xmark"></i>
-        </button>
-        <button @click="muteAudio('effects')">
-          <p>Effects</p>
-          <i v-if="audioSettings.effects" class="fa-solid fa-volume-high"></i>
-          <i v-else class="fa-solid fa-volume-xmark"></i>
-        </button>
+      <div class="features">
+        <PauseButton :disabled="isPlaying && !isPause" @pause-game="changeGameStatus('pause')"/>
+        <PiecesPreviewer
+          :is-preview="true"
+          :shapes-list="shapesList"
+          :occupied-cells-ids="occupiedCellsIds"
+          :grid-size="[4, 2]"
+          :cell-size="squareSize"
+        />
+        <AudioControls
+          :has-music="audioSettings.backgroundMusic"
+          :has-effects="audioSettings.effects"
+          @mute-audio="muteAudio('backgroundMusic')"
+          @mute-effects="muteAudio('effects')" />
       </div>
     </div>
     <FallingBlocks
@@ -51,6 +41,7 @@
     <SettingsPopup
       v-if="popup.isVisible"
       :type="popup.type"
+      :best-score="bestScore"
       @start-game="startGame"
       @continue-game="changeGameStatus('continue')"
       @end-game="endGame"/>
@@ -62,12 +53,15 @@ import gamePieces from './assets/tetris/gamePieces.js';
 import gameLevels from './assets/tetris/gameLevels.js';
 import gameSounds from './assets/tetris/gameSounds.js';
 import gameThemes from './assets/tetris/gameThemes.js';
+import gameFunctions from './assets/tetris/gameFunctions.js';
 import GameMap from './components/GameMap.vue';
 import GameInfo from './components/GameInfo.vue';
 import PiecesPreviewer from './components/PiecesPreviewer.vue';
 import FallingBlocks from './components/FallingBlocks.vue';
 import SettingsPopup from './components/SettingsPopup.vue';
 import LevelUpPopup from './components/LevelUpPopup.vue';
+import AudioControls from './components/AudioControls.vue';
+import PauseButton from './components/PauseButton.vue';
 
 export default {
   name: 'App',
@@ -78,6 +72,8 @@ export default {
     FallingBlocks,
     SettingsPopup,
     LevelUpPopup,
+    AudioControls,
+    PauseButton,
   },
   mounted() {
     document.addEventListener('keypress', (event) => {
@@ -133,6 +129,7 @@ export default {
         isVisible: true,
         type: 'start-popup',
       },
+      bestScore: 15000,
       gameTheme: gameThemes.themes.default,
       gameStatus: null,
       startingLevel: 0,
@@ -159,7 +156,7 @@ export default {
         effects: true,
       },
       gridSize: [10, 15], // width x length
-      gridWidth: 360,
+      gridWidth: gameFunctions.isMobile() ? 300 : 360,
       blocks: [],
       occupiedCellsIds: [],
       shapesList: [],
@@ -189,7 +186,7 @@ export default {
       const hasPieceOnMap = this.blocks.find(block => { return block.isPiece });
       this.generateShapes();
       if (hasPieceOnMap) {
-        this.pushBlocks('push', 'down', 'all');
+        this.moveBlocks('push', 'down', 'all');
       } else {
         this.checkRows();
         if (this.checkAddShape(this.shapesList[0].blocks)) {
@@ -322,7 +319,7 @@ export default {
       for (let i = 0; i < 3; i++) {
         if (this.shapesList.length === 3) break;
         this.shapesList.push(JSON.parse(JSON.stringify(
-          gamePieces.pieces[this.getRandomNumInRange(0, gamePieces.pieces.length)]
+          gamePieces.pieces[gameFunctions.getRandomNumInRange(0, gamePieces.pieces.length)]
         )));
       }
     },
@@ -350,9 +347,6 @@ export default {
         this.playAudio('score');
       }
     },
-    /* subtractSimpleArrays(arr1, arr2) {
-      return arr1.concat(arr2).filter(item => !arr1.includes(item) || !arr2.includes(item));
-    } */
     deleteRow(rowNumber) {      
       this.occupiedCellsIds = this.occupiedCellsIds.filter(cell => {
         return cell.split('-')[1] !== rowNumber
@@ -360,11 +354,6 @@ export default {
       this.blocks = this.blocks.filter(block => {
         return block.coords[1].toString() !== rowNumber
       });
-
-      /* const indexOfObject = arr.findIndex(object => {
-        return this.compareCoords(block.coords, newBlock.coords)object.id === 3;
-      }); */
-
       for (let i = 0; i < this.blocks.length; i++) {
         if (!this.blocks[i].isMovable) {
           this.updateBlockField(this.blocks[i], 'isMovable', true);
@@ -430,35 +419,13 @@ export default {
       }
       return checkPassed;
     },
-    getRadians(angle) {
-      return angle * Math.PI / 180;
-    },
-    getSin(angle) {
-      const radians = this.getRadians(angle);
-      return Math.sin(radians);
-    },
-    getCos(angle) {
-      const radians = this.getRadians(angle);
-      return Math.cos(radians);
-    },
-    getSinSign(angle) {
-      return Number(this.getSin(angle).toFixed(0));
-    },
-    getCosSign(angle) {
-      return Number(this.getCos(angle).toFixed(0));
-    },
-    getRotatedCoords(coordsToRotate, centerCoords, angle) {
-      const rotatedX = Number((this.getCos(angle) * (coordsToRotate[0] - centerCoords[0]) - this.getSin(angle) * (coordsToRotate[1] - centerCoords[1]) + centerCoords[0]).toFixed(0));
-      const rotatedY = Number((this.getSin(angle) * (coordsToRotate[0] - centerCoords[0]) + this.getCos(angle) * (coordsToRotate[1] - centerCoords[1]) + centerCoords[1]).toFixed(0));
-      return [rotatedX, rotatedY];
-    },
     rotateBlock(direction, block) {
       const rotationAngle = direction === 'left' ? 90 : -90;
       let rotatingBlock = JSON.parse(JSON.stringify(block));
       // Step 1: Rotazione blocco su se stesso
       let coordsToRotate = rotatingBlock.coords;
       let centerCoords = [ coordsToRotate[0] + 0.5, coordsToRotate[1] + 0.5 ];
-      let rotatedCoords = this.getRotatedCoords(coordsToRotate, centerCoords, -rotatingBlock.angleDegree);
+      let rotatedCoords = gameFunctions.getRotatedCoords(coordsToRotate, centerCoords, -rotatingBlock.angleDegree);
       // Step 2: Aggiornamento dell'angolo di rotazione del blocco
       rotatingBlock.angleDegree += rotationAngle;
       // Step 3: Rotazione del blocco sulla griglia
@@ -466,7 +433,7 @@ export default {
         rotatingBlock.relCoords[0] > 0 ? rotatedCoords[0] - rotatingBlock.relCoords[0] : rotatedCoords[0] + Math.abs(rotatingBlock.relCoords[0]),
         rotatingBlock.relCoords[1] > 0 ? rotatedCoords[1] + rotatingBlock.relCoords[1] : rotatedCoords[1] - Math.abs(rotatingBlock.relCoords[1])
       ];
-      rotatedCoords = this.getRotatedCoords(rotatedCoords, centerCoords, -rotationAngle);
+      rotatedCoords = gameFunctions.getRotatedCoords(rotatedCoords, centerCoords, -rotationAngle);
       // Step 4: Aggiornamento delle coordinate relative del blocco
       rotatingBlock.relCoords = [
         rotatedCoords[0] > centerCoords[0] ? rotatedCoords[0] - centerCoords[0] : -Math.abs(rotatedCoords[0] - centerCoords[0]),
@@ -474,7 +441,7 @@ export default {
       ];
       // Step 5: Rotazione inversa del blocco su se stesso
       centerCoords = [ rotatedCoords[0] - 0.5, rotatedCoords[1] - 0.5 ];
-      rotatedCoords = this.getRotatedCoords(rotatedCoords, centerCoords, -rotatingBlock.angleDegree);
+      rotatedCoords = gameFunctions.getRotatedCoords(rotatedCoords, centerCoords, -rotatingBlock.angleDegree);
       rotatingBlock.coords[0] = rotatedCoords[0];
       rotatingBlock.coords[1] = rotatedCoords[1];
       return rotatingBlock;
@@ -553,13 +520,6 @@ export default {
         }
       }
     },
-    pushBlocks(action, direction, type) {
-      this.moveBlocks(action, direction, type);
-    },
-    getRandomNumInRange(min, max) {
-      const randomNumber = Math.floor(Math.random() * (max - min) + min);
-      return randomNumber;
-    },
     addShape(shape) {
       this.blocks.push(...shape);
       this.shapesList.shift();
@@ -569,13 +529,6 @@ export default {
       this.timer = setInterval(() => {
         this.timeTick += ( velocity / 1000 );
       }, velocity);
-    },
-    getCellId(value) {
-      return Math.floor(value % this.gridSize[0]) + '-' + Math.floor(value / this.gridSize[0])
-    },
-    getActiveCells(id) {
-      if (this.activeCells.find(cell => { return cell.coords === id })) return true;
-      return false;
     },
   },
   computed: {

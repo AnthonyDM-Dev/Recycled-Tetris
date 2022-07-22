@@ -1,0 +1,27 @@
+.button {
+  &__controls {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    width: 150px;
+    margin-top: 10px;
+    padding: 10px;
+    margin: 20px;
+  }
+}
+@media only screen and (max-width: 767px) {
+  #volume-controls {
+    display: flex;
+  }
+  .button {
+    &__controls {
+      justify-content: center;
+      width: 90px;
+      margin: 5px;
+      font-size: 10px;
+      p {
+        margin-bottom: 5px;
+      }
+    }
+  }
+}

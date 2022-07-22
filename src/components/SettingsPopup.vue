@@ -8,36 +8,46 @@
         <img :src="require('/src/static/recycle.png')" class="recycle"/>
       </div>
     </div>
+    <div class="highscore-table">
+      <p class="highscore-table__title">Best Score</p>
+      <p class="highscore-table__score">{{ bestScore }}</p>
+    </div>
     <div v-if="type === 'start-popup'">
       <form name="settings">
-        <p class="options__title">Grid Size</p>
-        <div class="options__radio">
+        <div class="settings__options-radio">
           <div>
-            <input type="radio" id="normal" name="gridSize" value="10x15" checked>
-            <label for="normal">Normal - 10 x 15</label>
+            <p class="options__title">Grid Size</p>
+            <div class="options__radio">
+              <div>
+                <input type="radio" id="normal" name="gridSize" value="10x15" checked>
+                <label for="normal">10 x 15</label>
+              </div>
+              <div>
+                <input type="radio" id="large" name="gridSize" value="12x18">
+                <label for="large">12 x 18</label>
+              </div>
+              <div>
+                <input type="radio" id="extra-large" name="gridSize" value="15x20">
+                <label for="extra-large">15 x 20</label>
+              </div>
+            </div>
           </div>
           <div>
-            <input type="radio" id="large" name="gridSize" value="12x18">
-            <label for="large">Large - 12 x 18</label>
-          </div>
-          <div>
-            <input type="radio" id="extra-large" name="gridSize" value="15x20">
-            <label for="extra-large">XLarge - 15 x 20</label>
-          </div>
-        </div>
-        <p class="options__title">Theme</p>
-        <div class="options__radio">
-          <div>
-            <input type="radio" id="default" name="theme" value="default" checked>
-            <label for="default">Default</label>
-          </div>
-          <div>
-            <input type="radio" id="bricks" name="theme" value="bricks">
-            <label for="bricks">Bricks</label>
-          </div>
-          <div>
-            <input type="radio" id="sea" name="theme" value="sea">
-            <label for="sea">Sea</label>
+            <p class="options__title">Theme</p>
+            <div class="options__radio">
+              <div>
+                <input type="radio" id="default" name="theme" value="default" checked>
+                <label for="default">Default</label>
+              </div>
+              <div>
+                <input type="radio" id="bricks" name="theme" value="bricks">
+                <label for="bricks">Bricks</label>
+              </div>
+              <div>
+                <input type="radio" id="sea" name="theme" value="sea">
+                <label for="sea">Sea</label>
+              </div>
+            </div>
           </div>
         </div>
         <p class="options__title">Starting difficulty</p>
@@ -113,6 +123,10 @@ export default {
     },
     type: {
       type: String,
+      default: null,
+    },
+    bestScore: {
+      type: Number,
       default: null,
     },
   },

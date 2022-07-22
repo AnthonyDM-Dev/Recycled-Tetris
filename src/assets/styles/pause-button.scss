@@ -1,0 +1,21 @@
+#pause-button {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 20px 20px 20px;
+}
+.button {
+  &__pause {
+    font-size: 25px;
+    padding: 5px 10px;
+  }
+}
+@media only screen and (max-width: 767px) {
+  #pause-button {
+    order: 1;
+  }
+  .button {
+    &__pause {
+      font-size: 16px;
+    }
+  }
+}

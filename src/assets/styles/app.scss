@@ -25,11 +25,24 @@ h1, h2, h3, h4, h5, h6, p, label {
 .tetris {
   &__container {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     &-game {
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+  }
+}
+@media only screen and (max-width: 767px) {
+  .tetris {
+    &__container {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+  }
+  .features {
+    display: flex;
+    flex-direction: column;
   }
 }

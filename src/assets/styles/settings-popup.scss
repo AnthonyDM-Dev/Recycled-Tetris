@@ -135,11 +135,14 @@
       } 
   }
   @media only screen and (max-width: 767px) {
+    #settings-popup {
+      justify-content: flex-start;
+    }
     .settings {
       &__title {
-        height: 180px;
+        height: 160px;
         &-header {
-          font-size: 18px;
+          font-size: 16px;
         }
       }
       &__options {
@@ -171,18 +174,25 @@
       }
     }
     .recycle {
-      width: 150px;
+      width: 130px;
     }
     .button {
       &__main {
+          margin-top: 10px;
           font-size: 20px;
           min-width: 200px;
       }
     }
     .how-to-play {
+      &__container {
+        margin-top: 20px;
+        overflow-y: scroll;
+        max-height: 250px;
+      }
       &__rule {
         text-align: left;
         width: 300px;
+        font-size: 12px;
       }
     }
   }

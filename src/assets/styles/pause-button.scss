@@ -13,12 +13,12 @@
   #pause-button {
     order: 1;
     justify-content: center;
-    margin: 0px 5px 5px 5px;
+    margin: 5px;
   }
   .button {
     &__pause {
-      width: 250px;
-      font-size: 12px;
+      width: 50px;
+      font-size: 16px;
     }
   }
 }

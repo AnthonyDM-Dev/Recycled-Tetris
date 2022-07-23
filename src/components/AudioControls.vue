@@ -10,12 +10,22 @@
       <i v-if="hasEffects" class="fa-solid fa-volume-high"></i>
       <i v-else class="fa-solid fa-volume-xmark"></i>
     </button>
+    <PauseButton
+      v-if="isMobile"
+      :disabled="!isPlaying || isPause"
+      @pause-game="$emit('pause-game')"/>
   </div>
 </template>
 
 <script>
+import gameFunctions from '../assets/tetris/gameFunctions.js';
+import PauseButton from './PauseButton.vue';
+
 export default {
   name: 'AudioControls',
+  components: {
+    PauseButton,
+  },
   props: {
     hasMusic: {
       type: Boolean,
@@ -25,7 +35,20 @@ export default {
       type: Boolean,
       default: true,
     },
+    isPlaying: {
+      type: Boolean,
+      default: false,
+    },
+    isPause: {
+      type: Boolean,
+      default: false,
+    },
   },
+  computed: {
+    isMobile() {
+      return gameFunctions.isMobile;
+    }
+  }
 }
 </script>
 

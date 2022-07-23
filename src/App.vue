@@ -1,42 +1,41 @@
 <template>
-  <div id="tetris-game">
+  <div id="tetris">
     <div class="tetris__container">
       <div class="tetris__container-game">
         <GameInfo
           :seconds="seconds"
           :score="score"
-          :level-label="levelLabel"
-        />
+          :level-label="levelLabel" />
         <GameMap
           :is-preview="false"
           :occupied-cells-ids="occupiedCellsIds"
           :grid-width="gridWidth"
           :grid-size="gridSize"
           :cell-size="squareSize"
-          :theme="gameTheme"
-        />
+          :theme="gameTheme" />
       </div>
       <div class="features">
-        <PauseButton :disabled="isPlaying && !isPause" @pause-game="changeGameStatus('pause')"/>
+        <PauseButton v-if="!isMobile" :disabled="!isPlaying || isPause" @pause-game="changeGameStatus('pause')"/>
         <PiecesPreviewer
           :is-preview="true"
           :shapes-list="shapesList"
           :occupied-cells-ids="occupiedCellsIds"
           :grid-size="[4, 2]"
-          :cell-size="squareSize"
-        />
+          :cell-size="squareSize" />
         <AudioControls
           :has-music="audioSettings.backgroundMusic"
           :has-effects="audioSettings.effects"
+          :is-playing="isPlaying"
+          :is-pause="isPause"
           @mute-music="muteAudio('backgroundMusic')"
-          @mute-effects="muteAudio('effects')" />
+          @mute-effects="muteAudio('effects')"
+          @pause-game="changeGameStatus('pause')" />
       </div>
     </div>
     <FallingBlocks
       :blocks="blocks"
       :square-size="squareSize"
-      :is-playing="isPlaying"
-    />
+      :is-playing="isPlaying" />
     <LevelUpPopup v-if="hasLeveledUp" />
     <SettingsPopup
       v-if="popup.isVisible"
@@ -44,15 +43,11 @@
       :best-score="bestScore"
       @start-game="startGame"
       @continue-game="changeGameStatus('continue')"
-      @end-game="endGame"/>
+      @end-game="endGame" />
   </div>
 </template>
 
 <script>
-import gamePieces from './assets/tetris/gamePieces.js';
-import gameLevels from './assets/tetris/gameLevels.js';
-import gameSounds from './assets/tetris/gameSounds.js';
-import gameThemes from './assets/tetris/gameThemes.js';
 import gameFunctions from './assets/tetris/gameFunctions.js';
 import GameMap from './components/GameMap.vue';
 import GameInfo from './components/GameInfo.vue';
@@ -77,9 +72,9 @@ export default {
   mounted() {
     document.addEventListener('keypress', (event) => {
       if (event.key === "+") {
-        this.rotatePiece('rotate', 'right', 'piece');
+        this.moveBlocks('rotate', 'right', 'piece');
       } else if (event.key === "-") {
-        this.rotatePiece('rotate', 'left', 'piece');
+        this.moveBlocks('rotate', 'left', 'piece');
       } else if (event.key === "p" || event.key === "P") {
         this.changeGameStatus('pause');
       } else if (event.key === "c" || event.key === "C") {
@@ -102,14 +97,12 @@ export default {
         this.moveBlocks('push', 'down', 'piece');
       } else if (event.code === "ArrowUp") {
         event.preventDefault();
-        this.rotatePiece('rotate', 'right', 'piece');
-      }/* else if (event.code === "Enter") {
-        event.preventDefault();
-        this.startGame();
-      } */
+        this.moveBlocks('rotate', 'right', 'piece');
+      }
     }, false);
     document.ondragstart = () => false;
     document.addEventListener('pointerdown', (event) => {
+      if (event.target.closest('button')) return;
       this.setPointerCoords('down', [event.clientX, event.clientY]);
     });
     document.addEventListener('pointerup', (event) => {
@@ -128,13 +121,14 @@ export default {
   },
   data() {
     return {
+      maxShapesInList: 3,
       hasLeveledUp: false,
       popup: {
         isVisible: true,
         type: 'start-popup',
       },
       bestScore: 15000,
-      gameTheme: gameThemes.themes.default,
+      gameTheme: gameFunctions.getTheme('default'),
       gameStatus: null,
       startingLevel: 0,
       level: 0,
@@ -144,23 +138,12 @@ export default {
       timeTick: 0,
       timer: null,
       score: 4900,
-      sounds: {
-        backgroundMusic: new Audio(gameSounds.soundPaths.backgroundMusic),
-        moveBlock: new Audio(gameSounds.soundPaths.moveBlock),
-        rotateBlock: new Audio(gameSounds.soundPaths.rotateBlock),
-        score: new Audio(gameSounds.soundPaths.score),
-        pauseGame: new Audio(gameSounds.soundPaths.pauseGame),
-        continueGame: new Audio(gameSounds.soundPaths.continueGame),
-        loseGame: new Audio(gameSounds.soundPaths.loseGame),
-        error: new Audio(gameSounds.soundPaths.error),
-        levelUp: new Audio(gameSounds.soundPaths.levelUp),
-      },
       audioSettings: {
         backgroundMusic: true,
         effects: true,
       },
       gridSize: [10, 15], // width x length
-      gridWidth: gameFunctions.isMobile() ? 300 : 360,
+      gridWidth: gameFunctions.isMobile ? 300 : 360,
       blocks: [],
       occupiedCellsIds: [],
       shapesList: [],
@@ -191,14 +174,17 @@ export default {
     },
     timeTick(newVal) {
       if (!newVal) return;
-      const hasPieceOnMap = this.blocks.find(block => { return block.isPiece });
-      this.generateShapes();
-      if (hasPieceOnMap) {
+      for (let i = 0; i < this.maxShapesInList; i++) {
+        if (this.shapesList.length === this.maxShapesInList) break;
+        this.shapesList.push(gameFunctions.generateShape());
+      }
+      if (gameFunctions.hasPieceOnMap(this.blocks)) {
         this.moveBlocks('push', 'down', 'all');
       } else {
         this.checkRows();
-        if (this.checkAddShape(this.shapesList[0].blocks)) {
-          this.addShape(this.shapesList[0].blocks);
+        if (gameFunctions.canShapeBeAdded(this.shapesList[0].blocks, this.occupiedCellsIds)) {
+          this.blocks.push(...this.shapesList[0].blocks);
+          this.shapesList.shift();
         } else {
           this.changeGameStatus('lose');
         }
@@ -216,26 +202,9 @@ export default {
         this.pointer.startingCoords = coords;
       } else if (pointerAction === 'up') {
         this.pointer.finalCoords = coords;
-        this.getPointerResult();
-      }
-    },
-    getPointerResult() {
-      const deltaX = this.pointer.startingCoords[0] - this.pointer.finalCoords[0];
-      const deltaY = this.pointer.startingCoords[1] - this.pointer.finalCoords[1];
-      const ratioXY = deltaX / deltaY;
-      if (deltaX === 0 && deltaY === 0) {
-        this.rotatePiece('rotate', 'right', 'piece');
-      } else if (ratioXY < 1 && ratioXY > -1 && deltaY < 0) {
-        this.moveBlocks('push', 'down', 'piece');
-      } else if (deltaX < 0) {
-        this.moveBlocks('push', 'right', 'piece');
-      } else if (deltaX > 0) {
-        this.moveBlocks('push', 'left', 'piece');
-      }
-    },
-    updateHighscore() {
-      if (this.score > this.bestScore) {
-        this.bestScore = this.score;
+        if (this.pointer.startingCoords) {
+          this.moveBlocks(...gameFunctions.getPointerResult(this.pointer));
+        }
       }
     },
     resetConditions() {
@@ -257,7 +226,7 @@ export default {
     startGame(event) {
       this.resetConditions();
       this.gridSize = event.gridSize.value.split('x').map(size => { return Number(size) });
-      this.gameTheme = gameThemes.themes[event.theme.value];
+      this.gameTheme = gameFunctions.getTheme(event.theme.value);
       this.startingLevel = Number(event.level.value) - 1;
       this.level = this.startingLevel;
       this.triggerSettingsPopup(false, 'start-popup');
@@ -265,105 +234,39 @@ export default {
     },
     muteAudio(soundType) {
       this.audioSettings[soundType] = !this.audioSettings[soundType];
-      this.playAudio(soundType);
+      gameFunctions.playAudio(soundType);
     },
     increaseDifficulty() {
-      const level = gameLevels.levels.find(level => { return level.id === (this.level + 1) });
-      if (!level) return;
-      this.hasLeveledUp = true;
+      this.hasLeveledUp = gameFunctions.hasLeveledUp(this.level);
       this.level += 1;
       clearInterval(this.timer);
       this.updateTimer(this.level);
-      this.playAudio('levelUp');
-    },
-    playAudio(action) {
-      if (action === 'rotate') {
-        this.sounds.rotateBlock.play();
-      } else if (action === 'push') {
-        this.sounds.moveBlock.play();
-      } else if (action === 'score') {
-        this.sounds.score.play();
-      } else if (action === 'start') {
-        this.sounds.backgroundMusic.loop = true;
-        this.sounds.backgroundMusic.currentTime = 0;
-        this.sounds.backgroundMusic.play();
-      } else if (action === 'lose') {
-        this.sounds.backgroundMusic.pause();
-        this.sounds.loseGame.play();
-      } else if (action === 'pause') {
-        this.sounds.backgroundMusic.pause();
-        this.sounds.pauseGame.play();
-      } else if (action === 'continue') {
-        this.sounds.continueGame.play();
-        this.sounds.backgroundMusic.play();
-      } else if (action === 'error') {
-        this.sounds.error.play();
-      } else if (action === 'backgroundMusic') {
-        this.sounds.backgroundMusic.muted = !this.sounds.backgroundMusic.muted;
-      } else if (action === 'effects') {
-        for (let key of Object.entries(this.sounds)) {
-          if (key[0] === 'backgroundMusic') continue;
-          this.sounds[key[0]].muted = !this.sounds[key[0]].muted;
-        }
-      } else if (action === 'levelUp') {
-        this.sounds.levelUp.play();
-      }
-    },
-    updateScore(type) {
-      if (type === 'row') {
-        this.score += 100
-      } else if (type === 'push') {
-        this.score += 10
-      }
+      gameFunctions.playAudio('levelUp');
     },
     changeGameStatus(status) {
       if (status === this.gameStatus) return;
-
       if (status === 'start') {
         this.isPlaying = true;
         this.isPause = false;
-        this.playAudio('start');
+        gameFunctions.playAudio('start');
       } else if (status === 'lose') {
         this.isPlaying = false;
         this.isPause = false;
-        // this.updateHighscore();
-        this.playAudio('lose');
+        gameFunctions.playAudio('lose');
         this.triggerSettingsPopup(true, 'start-popup');
-        this.updateHighscore();
-        alert('You lose motherfucker!');
+        this.bestScore = gameFunctions.getHighscore(this.score, this.bestScore);
       } else if (status === 'pause') {
         if (!this.isPlaying) return;
         this.isPause = true;
         this.triggerSettingsPopup(true, 'options-popup');
-        this.playAudio('pause');
+        gameFunctions.playAudio('pause');
       } else if (status === 'continue') {
         if (!this.isPause) return;
         this.isPause = false;
         this.triggerSettingsPopup(false, 'start-popup');
-        this.playAudio('continue');
+        gameFunctions.playAudio('continue');
       }
       this.gameStatus = status;
-    },
-    compareCoords(aCoords, bCoords) {
-      if (aCoords[0] === bCoords[0] && aCoords[1] === bCoords[1]) return true;
-      return false;
-    },
-    updateBlockField(blockObj, key, value) {
-      blockObj[key] = value;
-    },
-    generateShapes() {
-      for (let i = 0; i < 3; i++) {
-        if (this.shapesList.length === 3) break;
-        this.shapesList.push(JSON.parse(JSON.stringify(
-          gamePieces.pieces[gameFunctions.getRandomNumInRange(0, gamePieces.pieces.length)]
-        )));
-      }
-    },
-    checkAddShape(newShape) {
-      const duplicatedCells = newShape.filter(block => {
-        return this.occupiedCellsIds.includes(block.coords.join('-'))
-      });
-      return duplicatedCells.length === 0;
     },
     checkRows() {
       let cellToDelete = 0;
@@ -373,14 +276,14 @@ export default {
         if (row.length >= this.gridSize[0]) {
           cellToDelete += 1;
           this.deleteRow(coordsArray[i][1]);
-          this.updateScore('row');
+          this.score += gameFunctions.addScore('row');
         }
       }
       for (let i = 0; i < (cellToDelete / this.gridSize[0]); i++) {
         this.moveBlocks('push', 'down', 'row');
       }
       if (cellToDelete) {
-        this.playAudio('score');
+        gameFunctions.playAudio('score');
       }
     },
     deleteRow(rowNumber) {      
@@ -392,182 +295,85 @@ export default {
       });
       for (let i = 0; i < this.blocks.length; i++) {
         if (!this.blocks[i].isMovable) {
-          this.updateBlockField(this.blocks[i], 'isMovable', true);
+          gameFunctions.updateBlockField(this.blocks[i], 'isMovable', true);
         }
       }
     },
     updateOccupiedCellsIds() {
       this.occupiedCellsIds = this.blocks.map(block => { return block.coords.join('-') });
     },
-    isCellOccupied(coords) {
-      return this.occupiedCellsIds.includes(coords.join('-'));
-    },
-    isOutOfMap(coords) {
-      return document.getElementById(coords.join('-')) ? false : true;
-    },
-    getNewBlockPosition(action, direction, block) {
-      let newBlock = JSON.parse(JSON.stringify(block));
-      if (action === 'push') {
-        if (direction === 'down') {
-          newBlock.coords[1] += 1;
-        } else if (direction === 'left') {
-          newBlock.coords[0] -= 1;
-        } else if (direction === 'right') {
-          newBlock.coords[0] += 1;
-        }
-      } else if (action === 'rotate') {
-        return this.rotateBlock(direction, block);
-      }
-      return newBlock;
-    },
-    getMovableBlocks(type) {
-      return this.blocks.filter(block => {
-        if (type === 'all') {
-          return block.isMovable === true
-        } else if (type === 'piece') {
-          return block.isMovable === true && block.isPiece === true
-        } else if (type === 'block') {
-          return block.isMovable === true && block.isPiece !== true
-        }
-      })
-    },
-    getSortedCoords(a, b, direction) {
-      if (direction === 'down') {
-        return b.coords[1] - a.coords[1];
-      } else if (direction === 'left') {
-        return a.coords[0] - b.coords[0];
-      } else if (direction === 'right') {
-        return b.coords[0] - a.coords[0];
-      }
-      return 0;
-    },
-    checkPieceMobility(action, direction, blocks) {
-      let checkPassed = true;
-      for (let i = 0; i < blocks.length; i++) {
-        const newBlock = this.getNewBlockPosition(action, direction, blocks[i]);
-        const isOccupied = this.blocks.find(block => {
-          return this.compareCoords(block.coords, newBlock.coords) && block.isPiece === false
-        });
-        if (this.isOutOfMap(newBlock.coords) || isOccupied) {
-          checkPassed = false;
-          break;
-        }
-      }
-      return checkPassed;
-    },
-    rotateBlock(direction, block) {
-      const rotationAngle = direction === 'left' ? 90 : -90;
-      let rotatingBlock = JSON.parse(JSON.stringify(block));
-      // Step 1: Rotazione blocco su se stesso
-      let coordsToRotate = rotatingBlock.coords;
-      let centerCoords = [ coordsToRotate[0] + 0.5, coordsToRotate[1] + 0.5 ];
-      let rotatedCoords = gameFunctions.getRotatedCoords(coordsToRotate, centerCoords, -rotatingBlock.angleDegree);
-      // Step 2: Aggiornamento dell'angolo di rotazione del blocco
-      rotatingBlock.angleDegree += rotationAngle;
-      // Step 3: Rotazione del blocco sulla griglia
-      centerCoords = [
-        rotatingBlock.relCoords[0] > 0 ? rotatedCoords[0] - rotatingBlock.relCoords[0] : rotatedCoords[0] + Math.abs(rotatingBlock.relCoords[0]),
-        rotatingBlock.relCoords[1] > 0 ? rotatedCoords[1] + rotatingBlock.relCoords[1] : rotatedCoords[1] - Math.abs(rotatingBlock.relCoords[1])
-      ];
-      rotatedCoords = gameFunctions.getRotatedCoords(rotatedCoords, centerCoords, -rotationAngle);
-      // Step 4: Aggiornamento delle coordinate relative del blocco
-      rotatingBlock.relCoords = [
-        rotatedCoords[0] > centerCoords[0] ? rotatedCoords[0] - centerCoords[0] : -Math.abs(rotatedCoords[0] - centerCoords[0]),
-        rotatedCoords[1] > centerCoords[1] ? -Math.abs(rotatedCoords[1] - centerCoords[1]) : Math.abs(rotatedCoords[1] - centerCoords[1])
-      ];
-      // Step 5: Rotazione inversa del blocco su se stesso
-      centerCoords = [ rotatedCoords[0] - 0.5, rotatedCoords[1] - 0.5 ];
-      rotatedCoords = gameFunctions.getRotatedCoords(rotatedCoords, centerCoords, -rotatingBlock.angleDegree);
-      rotatingBlock.coords[0] = rotatedCoords[0];
-      rotatingBlock.coords[1] = rotatedCoords[1];
-      return rotatingBlock;
-    },
-    rotatePiece(action, direction, type) {
-      if (this.gameStatus === 'pause' || !this.isPlaying) return;
-      const movablePieces = this.getMovableBlocks('piece');
-      if (type === 'piece' || type === 'all') {
-        const isPieceMovable = this.checkPieceMobility(action, direction, movablePieces);
-        if (isPieceMovable) {
-          for (let i = 0; i < movablePieces.length; i++) {
-            const newBlock = this.getNewBlockPosition(action, direction, movablePieces[i]);
+    moveRows(action, direction) {
+      let canRowSlide = false;
+      for (let i = this.gridSize[1] - 1; i > -1; i--) {
+        if (canRowSlide) {
+          const movableRow = this.blocks.filter(block => {
+            return block.coords[1] === i && block.isPiece === false
+          });
+          for (let i = 0; i < movableRow.length; i++) {
+            const newBlock = gameFunctions.getNewBlockPosition(action, direction, movableRow[i]);
             for (let [key, value] of Object.entries(newBlock)) {
-              this.updateBlockField(movablePieces[i], key, value);
+              gameFunctions.updateBlockField(movableRow[i], key, value);
             }
             this.updateOccupiedCellsIds();
           }
-          this.playAudio(action);
-        } else {
-          this.playAudio('error');
         }
+        const row = this.blocks.filter(block => {
+          return block.coords[1] === i
+        });
+        if (!row.length) {
+          canRowSlide = true;
+        }
+      }
+    },
+    movePiece(action, direction, type) {
+      const movablePieces = gameFunctions.getMovableBlocks('piece', this.blocks).sort((a, b) => {
+        return gameFunctions.getSortedCoords(a, b, direction);
+      });
+      const isPieceMovable = gameFunctions.checkPieceMobility(action, direction, movablePieces, this.blocks);
+      if (isPieceMovable) {
+        for (let i = 0; i < movablePieces.length; i++) {
+          const newBlock = gameFunctions.getNewBlockPosition(action, direction, movablePieces[i]);
+          for (let [key, value] of Object.entries(newBlock)) {
+            gameFunctions.updateBlockField(movablePieces[i], key, value);
+          }
+          this.updateOccupiedCellsIds();
+        }
+        if (movablePieces.length) {
+          if (movablePieces[0].isMovable && direction === 'down' && type === 'piece') {
+            this.score += gameFunctions.addScore('push');
+          }
+        }
+        gameFunctions.playAudio(action);
+      } else if (direction === 'down') {
+        for (let i = 0; i < movablePieces.length; i++) {
+          gameFunctions.updateBlockField(movablePieces[i], 'isMovable', false);
+          gameFunctions.updateBlockField(movablePieces[i], 'isPiece', false);
+        }
+        this.updateOccupiedCellsIds();
+      } else {
+        gameFunctions.playAudio('error');
       }
     },
     moveBlocks(action, direction, type) {
       if (this.gameStatus === 'pause' || !this.isPlaying) return;
       if (type === 'row' || type === 'all') {
-        let canRowSlide = false;
-        for (let i = this.gridSize[1] - 1; i > -1; i--) {
-          if (canRowSlide) {
-            const movableRow = this.blocks.filter(block => {
-              return block.coords[1] === i && block.isPiece === false
-            });
-            for (let i = 0; i < movableRow.length; i++) {
-              const newBlock = this.getNewBlockPosition(action, direction, movableRow[i]);
-              for (let [key, value] of Object.entries(newBlock)) {
-                this.updateBlockField(movableRow[i], key, value);
-              }
-              this.updateOccupiedCellsIds();
-            }
-          }
-          const row = this.blocks.filter(block => {
-            return block.coords[1] === i
-          });
-          if (!row.length) {
-            canRowSlide = true;
-          }
-        }
+        this.moveRows(action, direction);
       }
-
-      const movablePieces = this.getMovableBlocks('piece').sort((a, b) => {
-        return this.getSortedCoords(a, b, direction);
-      });
       if (type === 'piece' || type === 'all') {
-        const isPieceMovable = this.checkPieceMobility(action, direction, movablePieces);
-        if (isPieceMovable) {
-          const hasMovablePieces = movablePieces.length;
-          for (let i = 0; i < hasMovablePieces; i++) {
-            const newBlock = this.getNewBlockPosition(action, direction, movablePieces[i]);
-            for (let [key, value] of Object.entries(newBlock)) {
-              this.updateBlockField(movablePieces[i], key, value);
-            }
-            this.updateOccupiedCellsIds();
-          }
-          if (hasMovablePieces) {
-            if (movablePieces[0].isMovable && direction === 'down' && type === 'piece') {
-              this.updateScore('push');
-            }
-          }
-          this.playAudio('push');
-        } else if (direction === 'down') {
-          for (let i = 0; i < movablePieces.length; i++) {
-            this.updateBlockField(movablePieces[i], 'isMovable', false);
-            this.updateBlockField(movablePieces[i], 'isPiece', false);
-          }
-          this.updateOccupiedCellsIds();
-        }
+        this.movePiece(action, direction, type);
       }
-    },
-    addShape(shape) {
-      this.blocks.push(...shape);
-      this.shapesList.shift();
     },
     updateTimer(levelId) {
-      const velocity = gameLevels.levels.find(level => { return level.id === levelId }).velocity;
+      const velocity = gameFunctions.getVelocity(levelId);
       this.timer = setInterval(() => {
         this.timeTick += ( velocity / 1000 );
       }, velocity);
     },
   },
   computed: {
+    isMobile() {
+      return gameFunctions.isMobile;
+    },
     squareSize() {
       return this.gridWidth / this.gridSize[0];
     },
@@ -575,7 +381,7 @@ export default {
       return this.timeTick.toFixed(0);
     },
     levelLabel() {
-      return gameLevels.levels.find(level => { return level.id === this.level }).label;
+      return gameFunctions.getLevelLabel(this.level);
     },
   }
 }

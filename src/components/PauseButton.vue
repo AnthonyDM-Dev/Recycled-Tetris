@@ -2,8 +2,7 @@
   <div id="pause-button">
     <button class="button__pause" @click="$emit('pause-game')">
       <div>
-        <p v-if="isMobile">Pause </p>
-        <i v-else class="fa-solid fa-pause"></i>
+        <i class="fa-solid fa-pause"></i>
       </div>
     </button>
   </div>

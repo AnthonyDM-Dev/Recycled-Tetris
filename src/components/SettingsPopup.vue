@@ -77,9 +77,10 @@
       </div>
       <div v-show="isHowToPlayVisible" class="how-to-play__container">
         <div class="how-to-play__rule">
-          <div class="how-to-play__button"><i class="fa-solid fa-arrow-up"></i></div>
-          <p>Rotate clockwise</p>
+          <div class="how-to-play__button"><i class="fa-solid fa-hand-pointer"></i></div>
+          <p>Swipe to move</p>
         </div>
+        <p style="margin: 5px auto;">OR:</p>
         <div class="how-to-play__rule">
           <div class="how-to-play__button"><i class="fa-solid fa-arrow-down"></i></div>
           <p>Push down</p>
@@ -107,6 +108,14 @@
         <div class="how-to-play__rule">
           <div class="how-to-play__button">C</div>
           <p>Continue</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button">M</div>
+          <p>Mute music</p>
+        </div>
+        <div class="how-to-play__rule">
+          <div class="how-to-play__button">N</div>
+          <p>Mute effects</p>
         </div>
       </div>
     </div>

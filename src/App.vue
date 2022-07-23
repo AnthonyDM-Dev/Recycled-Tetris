@@ -483,7 +483,7 @@ export default {
       return rotatingBlock;
     },
     rotatePiece(action, direction, type) {
-      if (this.gameStatus === 'pause' && !this.isPlaying) return;
+      if (this.gameStatus === 'pause' || !this.isPlaying) return;
       const movablePieces = this.getMovableBlocks('piece');
       if (type === 'piece' || type === 'all') {
         const isPieceMovable = this.checkPieceMobility(action, direction, movablePieces);
@@ -502,7 +502,7 @@ export default {
       }
     },
     moveBlocks(action, direction, type) {
-      if (this.gameStatus === 'pause' && !this.isPlaying) return;
+      if (this.gameStatus === 'pause' || !this.isPlaying) return;
       if (type === 'row' || type === 'all') {
         let canRowSlide = false;
         for (let i = this.gridSize[1] - 1; i > -1; i--) {

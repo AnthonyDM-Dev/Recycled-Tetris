@@ -62,7 +62,6 @@ import SettingsPopup from './components/SettingsPopup.vue';
 import LevelUpPopup from './components/LevelUpPopup.vue';
 import AudioControls from './components/AudioControls.vue';
 import PauseButton from './components/PauseButton.vue';
-
 export default {
   name: 'App',
   components: {
@@ -109,14 +108,19 @@ export default {
         this.startGame();
       } */
     }, false);
+    document.ondragstart = () => false;
+    document.addEventListener('pointerdown', (event) => {
+      this.setPointerCoords('down', [event.clientX, event.clientY]);
+    });
+    document.addEventListener('pointerup', (event) => {
+      this.setPointerCoords('up', [event.clientX, event.clientY]);
+    });
   },
   head: {
     script: [
-      // Font awesome
       { type: 'text/javascript', src: 'https://kit.fontawesome.com/9a2c4fe4ba.js', crossorigin: 'anonymous', body: true },
     ],
     link: [
-      // Google Fonts
       { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
       { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: true },
       { rel: 'stylesheet', href: 'https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap'},
@@ -160,6 +164,10 @@ export default {
       blocks: [],
       occupiedCellsIds: [],
       shapesList: [],
+      pointer: {
+        startingCoords: null,
+        finalCoords: null,
+      },
     };
   },
   watch: {
@@ -203,6 +211,28 @@ export default {
     }
   },
   methods: {
+    setPointerCoords(pointerAction, coords) {
+      if (pointerAction === 'down') {
+        this.pointer.startingCoords = coords;
+      } else if (pointerAction === 'up') {
+        this.pointer.finalCoords = coords;
+        this.getPointerResult();
+      }
+    },
+    getPointerResult() {
+      const deltaX = this.pointer.startingCoords[0] - this.pointer.finalCoords[0];
+      const deltaY = this.pointer.startingCoords[1] - this.pointer.finalCoords[1];
+      const ratioXY = deltaX / deltaY;
+      if (deltaX === 0 && deltaY === 0) {
+        this.rotatePiece('rotate', 'right', 'piece');
+      } else if (ratioXY < 1 && ratioXY > -1 && deltaY < 0) {
+        this.moveBlocks('push', 'down', 'piece');
+      } else if (deltaX < 0) {
+        this.moveBlocks('push', 'right', 'piece');
+      } else if (deltaX > 0) {
+        this.moveBlocks('push', 'left', 'piece');
+      }
+    },
     updateHighscore() {
       if (this.score > this.bestScore) {
         this.bestScore = this.score;
@@ -453,7 +483,7 @@ export default {
       return rotatingBlock;
     },
     rotatePiece(action, direction, type) {
-      if (this.gameStatus === 'pause') return;
+      if (this.gameStatus === 'pause' && !this.isPlaying) return;
       const movablePieces = this.getMovableBlocks('piece');
       if (type === 'piece' || type === 'all') {
         const isPieceMovable = this.checkPieceMobility(action, direction, movablePieces);
@@ -472,7 +502,7 @@ export default {
       }
     },
     moveBlocks(action, direction, type) {
-      if (this.gameStatus === 'pause') return;
+      if (this.gameStatus === 'pause' && !this.isPlaying) return;
       if (type === 'row' || type === 'all') {
         let canRowSlide = false;
         for (let i = this.gridSize[1] - 1; i > -1; i--) {

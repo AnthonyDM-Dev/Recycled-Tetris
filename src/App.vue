@@ -97,13 +97,12 @@ export default {
         this.moveBlocks('rotate', 'right', 'piece');
       }
     }, false);
-    const tetris = document.getElementById('tetris');
-    
-    tetris.addEventListener('pointerdown', (event) => {
+    document.ondragstart = () => false;
+    document.addEventListener('pointerdown', (event) => {
       if (event.target.closest('button')) return;
       this.setPointerCoords('down', [event.clientX, event.clientY]);
     });
-    tetris.addEventListener('pointerup', (event) => {
+    document.addEventListener('pointerup', (event) => {
       this.setPointerCoords('up', [event.clientX, event.clientY]);
     });
   },

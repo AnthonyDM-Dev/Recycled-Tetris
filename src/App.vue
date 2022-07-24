@@ -97,8 +97,12 @@ export default {
         this.moveBlocks('rotate', 'right', 'piece');
       }
     }, false);
-    document.ondragstart = () => false;
     document.addEventListener('pointerdown', (event) => {
+      if (this.isPlaying) {
+        document.ondragstart = () => false;
+      } else {
+        document.ondragstart = () => true;
+      }
       if (event.target.closest('button')) return;
       this.setPointerCoords('down', [event.clientX, event.clientY]);
     });

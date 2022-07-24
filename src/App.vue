@@ -233,10 +233,12 @@ export default {
     },
     increaseDifficulty() {
       this.hasLeveledUp = gameFunctions.hasLeveledUp(this.level);
-      this.level += 1;
-      clearInterval(this.timer);
-      this.updateTimer(this.level);
-      gameFunctions.playAudio('levelUp');
+      if (this.hasLeveledUp) {
+        this.level += 1;
+        clearInterval(this.timer);
+        this.updateTimer(this.level);
+        gameFunctions.playAudio('levelUp');
+      }
     },
     changeGameStatus(status) {
       if (status === this.gameStatus) return;

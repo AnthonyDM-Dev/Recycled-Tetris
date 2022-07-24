@@ -97,16 +97,13 @@ export default {
         this.moveBlocks('rotate', 'right', 'piece');
       }
     }, false);
-    document.addEventListener('pointerdown', (event) => {
-      if (this.isPlaying) {
-        document.ondragstart = () => false;
-      } else {
-        document.ondragstart = () => true;
-      }
+    const tetris = document.getElementById('tetris');
+    tetris.ondragstart = () => false;
+    tetris.addEventListener('pointerdown', (event) => {
       if (event.target.closest('button')) return;
       this.setPointerCoords('down', [event.clientX, event.clientY]);
     });
-    document.addEventListener('pointerup', (event) => {
+    tetris.addEventListener('pointerup', (event) => {
       this.setPointerCoords('up', [event.clientX, event.clientY]);
     });
   },

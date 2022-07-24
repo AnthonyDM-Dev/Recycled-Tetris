@@ -22,7 +22,7 @@ import gameFunctions from '../assets/tetris/gameFunctions.js';
 import PauseButton from './PauseButton.vue';
 
 export default {
-  name: 'AudioControls',
+  name: 'InGameButtons',
   components: {
     PauseButton,
   },
@@ -53,5 +53,5 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import '../assets/styles/audio-controls.scss';
+@import '../assets/styles/in-game-buttons.scss';
 </style>

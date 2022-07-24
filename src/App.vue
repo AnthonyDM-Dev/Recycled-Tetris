@@ -19,7 +19,7 @@
           :occupied-cells-ids="occupiedCellsIds"
           :grid-size="[4, 2]"
           :cell-size="squareSize" />
-        <AudioControls
+        <InGameButtons
           :has-music="audioSettings.backgroundMusic"
           :has-effects="audioSettings.effects"
           :is-playing="isPlaying"
@@ -48,7 +48,7 @@ import GameMap from './components/GameMap.vue';
 import GameTable from './components/GameTable.vue';
 import PiecesPreviewer from './components/PiecesPreviewer.vue';
 import FallingBlocks from './components/FallingBlocks.vue';
-import AudioControls from './components/AudioControls.vue';
+import InGameButtons from './components/InGameButtons.vue';
 import PauseButton from './components/PauseButton.vue';
 import LevelUpPopup from './components/LevelUpPopup.vue';
 import SettingsPopup from './components/SettingsPopup.vue';
@@ -60,7 +60,7 @@ export default {
     GameTable,
     PiecesPreviewer,
     FallingBlocks,
-    AudioControls,
+    InGameButtons,
     PauseButton,
     LevelUpPopup,
     SettingsPopup,

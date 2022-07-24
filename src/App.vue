@@ -120,6 +120,7 @@ export default {
     return {
       bestScore: 15000,
       scoreIncreasingLevel: 5000,
+      timeTickIncreasingLevel: 60000,
       score: 0,
       startingLevel: 0,
       level: 0,

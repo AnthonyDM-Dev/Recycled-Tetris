@@ -87,7 +87,10 @@
         <button class="button__main" @click="triggerInstructions"><p>Back to Menu</p></button>
         <div class="how-to-play__rule">
           <div class="how-to-play__button"><i class="fa-solid fa-hand-pointer"></i></div>
-          <p>Swipe to move</p>
+          <div style="text-align: left;">
+            <p>Swipe to move.</p>
+            <p>Click to rotate.</p>
+          </div>
         </div>
         <p style="margin: 5px auto;">OR:</p>
         <div class="how-to-play__rule">

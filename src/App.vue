@@ -98,7 +98,7 @@ export default {
       }
     }, false);
     const tetris = document.getElementById('tetris');
-    tetris.ondragstart = () => false;
+    
     tetris.addEventListener('pointerdown', (event) => {
       if (event.target.closest('button')) return;
       this.setPointerCoords('down', [event.clientX, event.clientY]);

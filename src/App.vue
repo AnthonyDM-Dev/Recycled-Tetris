@@ -2,10 +2,7 @@
   <div id="tetris">
     <div class="tetris__container">
       <div class="tetris__container-game">
-        <GameInfo
-          :seconds="seconds"
-          :score="score"
-          :level-label="levelLabel" />
+        <GameTable :seconds="seconds" :score="score" :level-label="levelLabel" />
         <GameMap
           :is-preview="false"
           :occupied-cells-ids="occupiedCellsIds"
@@ -15,7 +12,7 @@
           :theme="gameTheme" />
       </div>
       <div class="features">
-        <PauseButton v-if="!isMobile" :disabled="!isPlaying || isPause" @pause-game="changeGameStatus('pause')"/>
+        <PauseButton v-if="!isMobile" @pause-game="changeGameStatus('pause')"/>
         <PiecesPreviewer
           :is-preview="true"
           :shapes-list="shapesList"
@@ -32,10 +29,7 @@
           @pause-game="changeGameStatus('pause')" />
       </div>
     </div>
-    <FallingBlocks
-      :blocks="blocks"
-      :square-size="squareSize"
-      :is-playing="isPlaying" />
+    <FallingBlocks :blocks="blocks" :square-size="squareSize" :is-playing="isPlaying" />
     <LevelUpPopup v-if="hasLeveledUp" />
     <SettingsPopup
       v-if="popup.isVisible"
@@ -44,30 +38,33 @@
       @start-game="startGame"
       @continue-game="changeGameStatus('continue')"
       @end-game="endGame" />
+    <InfoPopup v-if="isInfoPopupVisible" :is-visible="isInfoPopupVisible" />
   </div>
 </template>
 
 <script>
 import gameFunctions from './assets/tetris/gameFunctions.js';
 import GameMap from './components/GameMap.vue';
-import GameInfo from './components/GameInfo.vue';
+import GameTable from './components/GameTable.vue';
 import PiecesPreviewer from './components/PiecesPreviewer.vue';
 import FallingBlocks from './components/FallingBlocks.vue';
-import SettingsPopup from './components/SettingsPopup.vue';
-import LevelUpPopup from './components/LevelUpPopup.vue';
 import AudioControls from './components/AudioControls.vue';
 import PauseButton from './components/PauseButton.vue';
+import LevelUpPopup from './components/LevelUpPopup.vue';
+import SettingsPopup from './components/SettingsPopup.vue';
+import InfoPopup from './components/InfoPopup.vue';
 export default {
   name: 'App',
   components: {
     GameMap,
-    GameInfo,
+    GameTable,
     PiecesPreviewer,
     FallingBlocks,
-    SettingsPopup,
-    LevelUpPopup,
     AudioControls,
     PauseButton,
+    LevelUpPopup,
+    SettingsPopup,
+    InfoPopup,
   },
   mounted() {
     document.addEventListener('keypress', (event) => {
@@ -121,29 +118,25 @@ export default {
   },
   data() {
     return {
-      maxShapesInList: 3,
-      hasLeveledUp: false,
-      popup: {
-        isVisible: true,
-        type: 'start-popup',
-      },
       bestScore: 15000,
-      gameTheme: gameFunctions.getTheme('default'),
-      gameStatus: null,
+      scoreIncreasingLevel: 5000,
+      score: 0,
       startingLevel: 0,
       level: 0,
-      scoreIncreasingLevel: 5000,
+      hasLeveledUp: false,
+      gameStatus: null,
       isPlaying: false,
       isPause: false,
       timeTick: 0,
       timer: null,
-      score: 4900,
+      gameTheme: gameFunctions.getTheme('default'),
+      gridSize: [10, 15],
+      gridWidth: gameFunctions.isMobile ? 300 : 360,
       audioSettings: {
         backgroundMusic: true,
         effects: true,
       },
-      gridSize: [10, 15], // width x length
-      gridWidth: gameFunctions.isMobile ? 300 : 360,
+      maxShapesInPreviewer: 3,
       blocks: [],
       occupiedCellsIds: [],
       shapesList: [],
@@ -151,6 +144,11 @@ export default {
         startingCoords: null,
         finalCoords: null,
       },
+      popup: {
+        isVisible: true,
+        type: 'start-popup',
+      },
+      isInfoPopupVisible: false,
     };
   },
   watch: {
@@ -174,8 +172,8 @@ export default {
     },
     timeTick(newVal) {
       if (!newVal) return;
-      for (let i = 0; i < this.maxShapesInList; i++) {
-        if (this.shapesList.length === this.maxShapesInList) break;
+      for (let i = 0; i < this.maxShapesInPreviewer; i++) {
+        if (this.shapesList.length === this.maxShapesInPreviewer) break;
         this.shapesList.push(gameFunctions.generateShape());
       }
       if (gameFunctions.hasPieceOnMap(this.blocks)) {
@@ -207,22 +205,6 @@ export default {
         }
       }
     },
-    resetConditions() {
-      this.occupiedCellsIds = [];
-      this.blocks = [];
-      this.score = 0;
-      this.timeTick = 0;
-      this.isPlaying = false;
-      this.isPause = false;
-    },
-    triggerSettingsPopup(value, popupType) {
-      this.popup.isVisible = value;
-      this.popup.type = popupType;
-    },
-    endGame() {
-      this.changeGameStatus('lose');
-      this.triggerSettingsPopup(true, 'start-popup');
-    },
     startGame(event) {
       this.resetConditions();
       this.gridSize = event.gridSize.value.split('x').map(size => { return Number(size) });
@@ -231,6 +213,18 @@ export default {
       this.level = this.startingLevel;
       this.triggerSettingsPopup(false, 'start-popup');
       this.changeGameStatus('start');
+    },
+    endGame() {
+      this.changeGameStatus('lose');
+      this.triggerSettingsPopup(true, 'start-popup');
+    },
+    resetConditions() {
+      this.occupiedCellsIds = [];
+      this.blocks = [];
+      this.score = 0;
+      this.timeTick = 0;
+      this.isPlaying = false;
+      this.isPause = false;
     },
     muteAudio(soundType) {
       this.audioSettings[soundType] = !this.audioSettings[soundType];
@@ -284,6 +278,7 @@ export default {
       }
       if (cellToDelete) {
         gameFunctions.playAudio('score');
+        this.triggerInfoPopup();
       }
     },
     deleteRow(rowNumber) {      
@@ -299,10 +294,16 @@ export default {
         }
       }
     },
-    updateOccupiedCellsIds() {
-      this.occupiedCellsIds = this.blocks.map(block => { return block.coords.join('-') });
+    moveBlocks(action, direction, type) {
+      if (this.gameStatus === 'pause' || !this.isPlaying) return;
+      if (type === 'row' || type === 'all') {
+        this.moveRow(action, direction);
+      }
+      if (type === 'piece' || type === 'all') {
+        this.movePiece(action, direction, type);
+      }
     },
-    moveRows(action, direction) {
+    moveRow(action, direction) {
       let canRowSlide = false;
       for (let i = this.gridSize[1] - 1; i > -1; i--) {
         if (canRowSlide) {
@@ -354,20 +355,24 @@ export default {
         gameFunctions.playAudio('error');
       }
     },
-    moveBlocks(action, direction, type) {
-      if (this.gameStatus === 'pause' || !this.isPlaying) return;
-      if (type === 'row' || type === 'all') {
-        this.moveRows(action, direction);
-      }
-      if (type === 'piece' || type === 'all') {
-        this.movePiece(action, direction, type);
-      }
+    updateOccupiedCellsIds() {
+      this.occupiedCellsIds = this.blocks.map(block => { return block.coords.join('-') });
     },
     updateTimer(levelId) {
       const velocity = gameFunctions.getVelocity(levelId);
       this.timer = setInterval(() => {
         this.timeTick += ( velocity / 1000 );
       }, velocity);
+    },
+    triggerSettingsPopup(value, popupType) {
+      this.popup.isVisible = value;
+      this.popup.type = popupType;
+    },
+    triggerInfoPopup() {
+      this.isInfoPopupVisible = true;
+      setTimeout(() => {
+        this.isInfoPopupVisible = !this.isInfoPopupVisible;
+      }, 1800);
     },
   },
   computed: {

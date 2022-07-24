@@ -17,7 +17,7 @@
 
 <script>
 export default {
-  name: 'GameInfo',
+  name: 'GameTable',
   props: {
     seconds: {
       type: [Number, String],
